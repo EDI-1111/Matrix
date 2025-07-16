@@ -5,7 +5,6 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
   workflow_dispatch:
 
 jobs:
@@ -29,9 +28,8 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Matrix-exe
-        path: |
-          **/Release/*.exe
-          
+        path: '**/bin/Release/*.exe'
+
     - name: Automatisch Tag erzeugen
       id: tagger
       shell: bash
@@ -43,14 +41,12 @@ jobs:
         git tag "$TAG"
         git push origin "$TAG"
         echo "tag=$TAG" >> $GITHUB_ENV
-        echo "::set-output name=tag::$TAG"
-        
+
     - name: Release erstellen
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ steps.tagger.outputs.tag }}
-        name: Release ${{ steps.tagger.outputs.tag }}
-        files: |
-          **/Release/*.exe
+        tag_name: ${{ env.tag }}
+        name: Release ${{ env.tag }}
+        files: '**/bin/Release/*.exe'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
