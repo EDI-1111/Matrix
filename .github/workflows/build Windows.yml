@@ -27,6 +27,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: List built EXEs
+      shell: cmd
       run: dir /s /b *.exe
 
     - name: Upload EXE as artifact
