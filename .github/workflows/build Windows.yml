@@ -1,4 +1,4 @@
-name: Build Windows EXE and Create Release
+name: Build .NET Project and Create Release
 
 on:
   push:
@@ -12,25 +12,30 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Repository auschecken
+    - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Visual Studio Developer Command Prompt einrichten
-      uses: ilammy/msvc-dev-cmd@v1
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'  # oder 6.0.x, 7.0.x je nach Projekt
 
-    - name: Projekt mit MSBuild bauen
-      run: msbuild Matrix.sln /p:Configuration=Release
+    - name: Restore dependencies
+      run: dotnet restore
 
-    - name: Gefundene EXE-Dateien auflisten
-      run: cmd /c "dir /s /b *.exe"
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
 
-    - name: EXE als Artefakt hochladen
+    - name: List built EXEs
+      run: dir /s /b *.exe
+
+    - name: Upload EXE as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Matrix-exe
-        path: '**/bin/Release/*.exe'
+        name: dotnet-exe
+        path: '**/bin/Release/net*/**/*.exe'
 
-    - name: Automatisch Tag erzeugen
+    - name: Create tag
       id: tagger
       shell: bash
       run: |
@@ -42,11 +47,11 @@ jobs:
         git push origin "$TAG"
         echo "tag=$TAG" >> $GITHUB_ENV
 
-    - name: Release erstellen
+    - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.tag }}
         name: Release ${{ env.tag }}
-        files: '**/bin/Release/*.exe'
+        files: '**/bin/Release/net*/**/*.exe'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
